@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracker Board</title>
+    <style>
+        :root {
+            font-family: system-ui, sans-serif;
+            color: #111827;
+            background: #f3f4f6;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: #f3f4f6;
+        }
+
+        header {
+            background: #ffffff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1.75rem 1.5rem;
+        }
+
+        header h1 {
+            margin: 0 0 0.35rem;
+            font-size: clamp(1.9rem, 2.5vw, 2.5rem);
+        }
+
+        header p {
+            margin: 0;
+            color: #4b5563;
+            max-width: 54rem;
+        }
+
+        main {
+            flex: 1;
+            padding: 1.5rem;
+        }
+
+        .board {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+            align-items: start;
+        }
+
+        .column {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 1rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 24rem;
+        }
+
+        .column-header {
+            padding: 1rem 1rem 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            gap: 0.75rem;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .column-header span {
+            color: #4b5563;
+            font-size: 0.95rem;
+        }
+
+        .task-list {
+            padding: 0 1rem 1rem;
+            display: grid;
+            gap: 0.85rem;
+            overflow: auto;
+        }
+
+        .task-card {
+            background: #f9fafb;
+            border: 1px solid #d1d5db;
+            border-radius: 0.95rem;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .task-card h2 {
+            margin: 0;
+            font-size: 1rem;
+            color: #111827;
+        }
+
+        .task-card p {
+            margin: 0;
+            color: #4b5563;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .task-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #374151;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.55rem;
+            border-radius: 9999px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            color: #ffffff;
+        }
+
+        .chip.High { background: #dc2626; }
+        .chip.Medium { background: #f59e0b; }
+        .chip.Low { background: #10b981; }
+
+        .task-button:hover {
+            background: #1d4ed8;
+        }
+
+        .board-alert {
+            margin: 0 1rem 1rem;
+            padding: 0.9rem 1rem;
+            background: #fef3f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            border-radius: 0.75rem;
+        }
+
+        /* Modal styles (keeps visual harmony with existing UI) */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 60;
+        }
+
+        .modal-overlay.is-open {
+            display: flex;
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 0.75rem;
+            width: 100%;
+            max-width: 36rem;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 10px 30px rgba(2,6,23,0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
+
+        .form-row { margin-bottom: 0.5rem; }
+        .form-row label { display:block; font-weight:600; margin-bottom:0.25rem; }
+        .form-row input[type="text"], .form-row textarea, .form-row select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .form-error { color: #991b1b; font-size: 0.9rem; margin-top: 0.25rem; }
+
+        @media (max-width: 640px) {
+            .board {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+
+        .task-card.dragging {
+            opacity: 0.5;
+        }
+
+        .board-alert {
+            margin: 0 1rem 1rem;
+            padding: 0.9rem 1rem;
+            background: #fef3f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            border-radius: 0.75rem;
+        }
+
+        @media (max-width: 640px) {
+            .board {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+            <div>
+                <h1>Task Board</h1>
+                <p>Drag tasks between columns to update their status.</p>
+            </div>
+            <div>
+                <button id="new-task-button" class="task-button" type="button">New Task</button>
+            </div>
+        </div>
+    </header>
+    <main>
+        <section class="board" aria-label="Task board">
+            <article class="column" data-status="ToDo">
+                <div class="column-header">
+                    <span>To Do</span>
+                    <span>1 card</span>
+                </div>
+                <div class="task-list">
+                    <article class="task-card">
+                        <h2>Write landing page copy</h2>
+                        <p>Draft an updated headline and feature bullets for the homepage.</p>
+                        <div class="task-meta">
+                            <span class="chip High">High</span>
+                            <span>Unassigned</span>
+                            <span>Assignee: None</span>
+                        </div>
+                        <button class="task-button" type="button">Edit</button>
+                    </article>
+                </div>
+            </article>
+
+            <article class="column" data-status="InProgress">
+                <div class="column-header">
+                    <span>In Progress</span>
+                    <span>1 card</span>
+                </div>
+                <div class="task-list">
+                    <article class="task-card">
+                        <h2>Review API validation rules</h2>
+                        <p>Check the task update endpoint for proper status and title validation.</p>
+                        <div class="task-meta">
+                            <span class="chip Medium">Medium</span>
+                            <span>Assigned to Alex</span>
+                            <span>Assignee: Alex</span>
+                        </div>
+                        <button class="task-button" type="button">Edit</button>
+                    </article>
+                </div>
+            </article>
+
+            <article class="column" data-status="Done">
+                <div class="column-header">
+                    <span>Done</span>
+                    <span>1 card</span>
+                </div>
+                <div class="task-list">
+                    <article class="task-card">
+                        <h2>Set up FastAPI routes</h2>
+                        <p>Implement task CRUD endpoints for the board to consume.</p>
+                        <div class="task-meta">
+                            <span class="chip Low">Low</span>
+                            <span>Assigned to Sam</span>
+                            <span>Assignee: Sam</span>
+                        </div>
+                        <button class="task-button" type="button">Edit</button>
+                    </article>
+                </div>
+            </article>
+        </section>
+    </main>
+
+    <!-- Modal overlay for create / edit -->
+    <div id="modal-overlay" class="modal-overlay" aria-hidden="true">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <div class="modal-header">
+                <h3 id="modal-title">New Task</h3>
+                <button class="modal-close" id="modal-close" aria-label="Close">✕</button>
+            </div>
+            <form id="task-form">
+                <div id="modal-error" class="form-error" style="display:none;"></div>
+                <input type="hidden" id="task-id">
+                <div class="form-row">
+                    <label for="title">Title</label>
+                    <input id="title" name="title" type="text" required />
+                    <div id="title-error" class="form-error" style="display:none;">Title is required</div>
+                </div>
+                <div class="form-row">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-row">
+                    <label for="status">Status</label>
+                    <select id="status" name="status">
+                        <option value="ToDo">To Do</option>
+                        <option value="InProgress">In Progress</option>
+                        <option value="Done">Done</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label for="priority">Priority</label>
+                    <select id="priority" name="priority">
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label for="assignee">Assignee</label>
+                    <input id="assignee" name="assignee" type="text" />
+                </div>
+                <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:0.5rem;">
+                    <button type="button" id="modal-cancel" class="task-button">Cancel</button>
+                    <button type="submit" id="modal-submit" class="task-button">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://localhost:8000";
+        const STATUSES = ["ToDo", "InProgress", "Done"];
+        const STATUS_LABELS = {
+            ToDo: "To Do",
+            InProgress: "In Progress",
+            Done: "Done"
+        };
+        const PRIORITY_ORDER = { High: 0, Medium: 1, Low: 2 };
+        let tasks = [];
+        let boardState = "loading";
+        let currentDragId = null;
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        function sortTasks(taskList) {
+            return [...taskList].sort((a, b) => {
+                const priorityA = PRIORITY_ORDER[a.priority] ?? 3;
+                const priorityB = PRIORITY_ORDER[b.priority] ?? 3;
+                if (priorityA !== priorityB) {
+                    return priorityA - priorityB;
+                }
+                // Within the same priority, order by creation time (oldest first).
+                // Backend supplies `created_at` as an ISO timestamp; use it when available.
+                const tA = a.created_at ? Date.parse(a.created_at) : NaN;
+                const tB = b.created_at ? Date.parse(b.created_at) : NaN;
+                if (!Number.isNaN(tA) && !Number.isNaN(tB)) {
+                    return tA - tB;
+                }
+                // Fallback to stable id-based ordering when timestamps are missing.
+                return String(a.id).localeCompare(String(b.id), undefined, {
+                    numeric: true,
+                    sensitivity: "base"
+                });
+            });
+        }
+
+        function showBoardAlert(message) {
+            let alert = document.querySelector(".board-alert");
+            if (!alert) {
+                alert = document.createElement("div");
+                alert.className = "board-alert";
+                const board = document.querySelector(".board");
+                board.parentNode.insertBefore(alert, board);
+            }
+            alert.textContent = message;
+        }
+
+        function clearBoardAlert() {
+            const alert = document.querySelector(".board-alert");
+            if (alert) {
+                alert.remove();
+            }
+        }
+
+        function renderLoading() {
+            boardState = "loading";
+            clearBoardAlert();
+            const board = document.querySelector(".board");
+            board.innerHTML = `
+                <article class="column" data-status="loading">
+                    <div class="column-header">
+                        <span>Loading tasks</span>
+                        <span></span>
+                    </div>
+                    <div class="task-list">
+                        <article class="task-card">
+                            <h2>Loading tasks…</h2>
+                            <p>Please wait while your board loads.</p>
+                        </article>
+                    </div>
+                </article>
+            `;
+        }
+
+        function renderError(message) {
+            boardState = "error";
+            clearBoardAlert();
+            const board = document.querySelector(".board");
+            board.innerHTML = `
+                <article class="column" data-status="error">
+                    <div class="column-header">
+                        <span>Error loading tasks</span>
+                        <span></span>
+                    </div>
+                    <div class="task-list">
+                        <article class="task-card">
+                            <h2>Unable to load tasks</h2>
+                            <p>${escapeHtml(message)}</p>
+                            <button class="task-button" type="button" onclick="fetchTasks()">Retry</button>
+                        </article>
+                    </div>
+                </article>
+            `;
+        }
+
+        function attachDragHandlers() {
+            document.querySelectorAll(".task-card").forEach((card) => {
+                card.draggable = true;
+                card.addEventListener("dragstart", onDragStart);
+                card.addEventListener("dragend", onDragEnd);
+            });
+
+            document.querySelectorAll(".column").forEach((column) => {
+                column.addEventListener("dragover", onDragOver);
+                column.addEventListener("dragleave", onDragLeave);
+                column.addEventListener("drop", onDrop);
+            });
+        }
+
+        function onDragStart(event) {
+            const card = event.currentTarget;
+            const taskId = card.dataset.taskId;
+            if (!taskId) {
+                return;
+            }
+            currentDragId = taskId;
+            event.dataTransfer?.setData("text/plain", taskId);
+            event.dataTransfer?.setData("application/json", JSON.stringify({ taskId }));
+            event.dataTransfer.effectAllowed = "move";
+            card.classList.add("dragging");
+        }
+
+        function onDragEnd(event) {
+            event.currentTarget.classList.remove("dragging");
+            currentDragId = null;
+        }
+
+        function onDragOver(event) {
+            event.preventDefault();
+            event.currentTarget.classList.add("drag-over");
+            if (event.dataTransfer) {
+                event.dataTransfer.dropEffect = "move";
+            }
+        }
+
+        function onDragLeave(event) {
+            event.currentTarget.classList.remove("drag-over");
+        }
+
+        async function onDrop(event) {
+            event.preventDefault();
+            const column = event.currentTarget;
+            column.classList.remove("drag-over");
+            const targetStatus = column.dataset.status;
+            const taskId = event.dataTransfer?.getData("text/plain") || currentDragId;
+            if (!taskId || !targetStatus || !STATUSES.includes(targetStatus)) {
+                return;
+            }
+
+            const task = tasks.find((item) => item.id === taskId);
+            if (!task || task.status === targetStatus) {
+                return;
+            }
+
+            const previousStatus = task.status;
+            tasks = tasks.map((item) =>
+                item.id === taskId ? { ...item, status: targetStatus } : item
+            );
+            renderBoard(tasks);
+
+            try {
+                const response = await fetch(`${API_BASE}/tasks/${encodeURIComponent(taskId)}`, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ status: targetStatus })
+                });
+
+                if (!response.ok) {
+                    let errorText = await response.text();
+                    try {
+                        const errorJson = JSON.parse(errorText);
+                        errorText = errorJson.detail || errorJson.message || errorText;
+                    } catch {
+                        // leave raw text
+                    }
+                    throw new Error(errorText || `Server returned ${response.status}`);
+                }
+            } catch (error) {
+                tasks = tasks.map((item) =>
+                    item.id === taskId ? { ...item, status: previousStatus } : item
+                );
+                renderBoard(tasks);
+                showBoardAlert(`Unable to move task: ${error.message || "network error"}`);
+            }
+        }
+
+        function renderBoard(taskItems) {
+            clearBoardAlert();
+            const board = document.querySelector(".board");
+            const grouped = STATUSES.reduce((acc, status) => {
+                acc[status] = [];
+                return acc;
+            }, {});
+
+            taskItems.forEach((task) => {
+                if (STATUSES.includes(task.status)) {
+                    grouped[task.status].push(task);
+                }
+            });
+
+            const totalCount = taskItems.length;
+            boardState = totalCount === 0 ? "empty" : "ready";
+
+            board.innerHTML = STATUSES.map((status) => {
+                const columnTasks = sortTasks(grouped[status]);
+                const cards = columnTasks.length
+                    ? columnTasks.map((task) => {
+                        const assigneeText = task.assignee ? escapeHtml(task.assignee) : "Unassigned";
+                        return `
+                            <article class="task-card" data-task-id="${escapeHtml(task.id)}">
+                                <h2>${escapeHtml(task.title)}</h2>
+                                <p>${escapeHtml(task.description || "")}</p>
+                                <div class="task-meta">
+                                    <span class="chip ${escapeHtml(task.priority)}">${escapeHtml(task.priority)}</span>
+                                    <span>${assigneeText}</span>
+                                    <span>Assignee: ${assigneeText}</span>
+                                </div>
+                                <button class="task-button edit-button" data-task-id="${escapeHtml(task.id)}" type="button">Edit</button>
+                            </article>
+                        `;
+                    }).join("")
+                    : `
+                        <article class="task-card">
+                            <h2>No tasks yet</h2>
+                            <p>Drop a task here once the board supports moving cards.</p>
+                        </article>
+                    `;
+
+                return `
+                    <article class="column" data-status="${status}">
+                        <div class="column-header">
+                            <span>${STATUS_LABELS[status]}</span>
+                            <span>${columnTasks.length} card${columnTasks.length === 1 ? "" : "s"}</span>
+                        </div>
+                        <div class="task-list">
+                            ${cards}
+                        </div>
+                    </article>
+                `;
+            }).join("");
+
+            attachDragHandlers();
+            attachEditHandlers();
+        }
+
+        function attachEditHandlers() {
+            document.querySelectorAll('.edit-button').forEach((btn) => {
+                btn.addEventListener('click', (e) => {
+                    const id = btn.dataset.taskId;
+                    openEditModal(id);
+                });
+            });
+        }
+
+        /* Modal helpers */
+        function openNewModal() {
+            clearModalErrors();
+            document.getElementById('modal-title').textContent = 'New Task';
+            document.getElementById('task-id').value = '';
+            document.getElementById('title').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('status').value = 'ToDo';
+            document.getElementById('priority').value = 'Medium';
+            document.getElementById('assignee').value = '';
+            openModal();
+        }
+
+        function openEditModal(taskId) {
+            clearModalErrors();
+            const task = tasks.find((t) => t.id === taskId);
+            if (!task) return;
+            document.getElementById('modal-title').textContent = 'Edit Task';
+            document.getElementById('task-id').value = task.id;
+            document.getElementById('title').value = task.title || '';
+            document.getElementById('description').value = task.description || '';
+            document.getElementById('status').value = task.status || 'ToDo';
+            document.getElementById('priority').value = task.priority || 'Medium';
+            document.getElementById('assignee').value = task.assignee || '';
+            openModal();
+        }
+
+        function openModal() {
+            const overlay = document.getElementById('modal-overlay');
+            overlay.classList.add('is-open');
+            overlay.setAttribute('aria-hidden', 'false');
+            document.getElementById('title').focus();
+        }
+
+        function closeModal() {
+            const overlay = document.getElementById('modal-overlay');
+            overlay.classList.remove('is-open');
+            overlay.setAttribute('aria-hidden', 'true');
+            clearModalErrors();
+        }
+
+        function clearModalErrors() {
+            document.getElementById('modal-error').style.display = 'none';
+            document.getElementById('modal-error').textContent = '';
+            document.getElementById('title-error').style.display = 'none';
+        }
+
+        function showModalError(msg) {
+            const el = document.getElementById('modal-error');
+            el.textContent = msg;
+            el.style.display = 'block';
+        }
+
+        async function submitModalForm(event) {
+            event.preventDefault();
+            clearModalErrors();
+            const id = document.getElementById('task-id').value.trim();
+            const title = document.getElementById('title').value.trim();
+            if (!title) {
+                document.getElementById('title-error').style.display = 'block';
+                return;
+            }
+            const description = document.getElementById('description').value || '';
+            const statusVal = document.getElementById('status').value;
+            const priorityVal = document.getElementById('priority').value;
+            const assigneeRaw = document.getElementById('assignee').value.trim();
+            const assignee = assigneeRaw === '' ? null : assigneeRaw;
+
+            const payload = {
+                title: title,
+                description: description === null ? '' : description,
+                status: statusVal,
+                priority: priorityVal,
+                assignee: assignee,
+            };
+
+            const submitBtn = document.getElementById('modal-submit');
+            submitBtn.disabled = true;
+
+            try {
+                let response;
+                if (id) {
+                    response = await fetch(`${API_BASE}/tasks/${encodeURIComponent(id)}`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    });
+                } else {
+                    response = await fetch(`${API_BASE}/tasks`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                    });
+                }
+
+                if (response.status === 422) {
+                    // show validation message from server and keep modal open
+                    let msg = 'Validation error';
+                    try {
+                        const json = await response.json();
+                        msg = json.detail || JSON.stringify(json);
+                    } catch (e) {
+                        msg = await response.text();
+                    }
+                    showModalError(typeof msg === 'string' ? msg : JSON.stringify(msg));
+                    return;
+                }
+
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(text || `Server returned ${response.status}`);
+                }
+
+                // success (200/201)
+                closeModal();
+                await fetchTasks();
+            } catch (err) {
+                showModalError(err.message || 'Network error');
+            } finally {
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Wire modal controls
+        document.getElementById('new-task-button').addEventListener('click', openNewModal);
+        document.getElementById('modal-close').addEventListener('click', closeModal);
+        document.getElementById('modal-cancel').addEventListener('click', closeModal);
+        document.getElementById('task-form').addEventListener('submit', submitModalForm);
+        document.getElementById('modal-overlay').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) closeModal();
+        });
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        async function fetchTasks() {
+            renderLoading();
+            try {
+                const response = await fetch(`${API_BASE}/tasks`);
+                if (!response.ok) {
+                    throw new Error(`Task load failed: ${response.status}`);
+                }
+                const data = await response.json();
+                tasks = Array.isArray(data) ? data : [];
+                renderBoard(tasks);
+            } catch (error) {
+                renderError(error.message || "Network error");
+                console.error(error);
+            }
+        }
+
+        window.addEventListener("DOMContentLoaded", fetchTasks);
+    </script>
+</body>
+</html>
