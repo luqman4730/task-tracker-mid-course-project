@@ -73,6 +73,170 @@ def test_list_tasks_filter_by_priority_returns_only_matches(client):
     assert tasks[0]["priority"] == "High"
 
 
+# Tests for new feature 1
+
+def test_list_tasks_search_matches_title(client):
+    matching_response = client.post(
+        "/tasks",
+        json={
+            "title": "Monthly Report",
+            "description": "Prepare finance documents",
+        },
+    )
+    other_response = client.post(
+        "/tasks",
+        json={
+            "title": "Team Meeting",
+            "description": "Discuss project progress",
+        },
+    )
+    assert matching_response.status_code == 201
+    assert other_response.status_code == 201
+
+    response = client.get("/tasks", params={"search": "Monthly"})
+
+    assert response.status_code == 200
+    tasks = response.json()
+    assert len(tasks) == 1
+    assert tasks[0]["id"] == matching_response.json()["id"]
+
+
+def test_list_tasks_search_matches_description(client):
+    matching_response = client.post(
+        "/tasks",
+        json={
+            "title": "Fix Login Page",
+            "description": "Update frontend validation",
+        },
+    )
+    other_response = client.post(
+        "/tasks",
+        json={
+            "title": "Write Documentation",
+            "description": "Prepare project notes",
+        },
+    )
+    assert matching_response.status_code == 201
+    assert other_response.status_code == 201
+
+    response = client.get("/tasks", params={"search": "validation"})
+
+    assert response.status_code == 200
+    tasks = response.json()
+    assert len(tasks) == 1
+    assert tasks[0]["id"] == matching_response.json()["id"]
+
+
+def test_list_tasks_search_is_case_insensitive(client):
+    create_response = client.post(
+        "/tasks",
+        json={
+            "title": "Monthly Report",
+            "description": "Prepare finance documents",
+        },
+    )
+    assert create_response.status_code == 201
+
+    response = client.get("/tasks", params={"search": "monthly report".upper()})
+
+    assert response.status_code == 200
+    tasks = response.json()
+    assert len(tasks) == 1
+    assert tasks[0]["id"] == create_response.json()["id"]
+
+
+def test_list_tasks_search_no_match_returns_200_and_empty_list(client):
+    create_response = client.post(
+        "/tasks",
+        json={"title": "Existing Task"},
+    )
+    assert create_response.status_code == 201
+
+    response = client.get("/tasks", params={"search": "xxxxxxxx"})
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_list_tasks_search_combined_with_status_uses_and_logic(client):
+    todo_response = client.post(
+        "/tasks",
+        json={
+            "title": "Monthly Report",
+            "status": "ToDo",
+        },
+    )
+    in_progress_response = client.post(
+        "/tasks",
+        json={
+            "title": "Monthly Report Draft",
+            "status": "InProgress",
+        },
+    )
+    assert todo_response.status_code == 201
+    assert in_progress_response.status_code == 201
+
+    response = client.get(
+        "/tasks",
+        params={
+            "search": "Monthly Report",
+            "status": "ToDo",
+        },
+    )
+
+    assert response.status_code == 200
+    tasks = response.json()
+    assert len(tasks) == 1
+    assert tasks[0]["id"] == todo_response.json()["id"]
+    assert tasks[0]["status"] == "ToDo"
+
+
+def test_list_tasks_search_combined_with_status_and_priority(client):
+    matching_response = client.post(
+        "/tasks",
+        json={
+            "title": "Monthly Report",
+            "status": "ToDo",
+            "priority": "High",
+        },
+    )
+    wrong_priority_response = client.post(
+        "/tasks",
+        json={
+            "title": "Monthly Report",
+            "status": "ToDo",
+            "priority": "Low",
+        },
+    )
+    wrong_status_response = client.post(
+        "/tasks",
+        json={
+            "title": "Monthly Report",
+            "status": "InProgress",
+            "priority": "High",
+        },
+    )
+    assert matching_response.status_code == 201
+    assert wrong_priority_response.status_code == 201
+    assert wrong_status_response.status_code == 201
+
+    response = client.get(
+        "/tasks",
+        params={
+            "search": "Monthly Report",
+            "status": "ToDo",
+            "priority": "High",
+        },
+    )
+
+    assert response.status_code == 200
+    tasks = response.json()
+    assert len(tasks) == 1
+    assert tasks[0]["id"] == matching_response.json()["id"]
+    assert tasks[0]["status"] == "ToDo"
+    assert tasks[0]["priority"] == "High"
+
+
 def test_get_task_by_id_returns_task(client, created_task):
     response = client.get(f"/tasks/{created_task['id']}")
 

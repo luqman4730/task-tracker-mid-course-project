@@ -53,10 +53,14 @@ def health_check() -> dict:
 def list_tasks(
     status: TaskStatus | None = None,
     priority: TaskPriority | None = None,
+    search: str | None = None,
 ) -> list[TaskResponse]:
-    return storage.get_all_tasks(status=status, priority=priority)
-
-
+    return storage.get_all_tasks(
+        status=status,
+        priority=priority,
+        search=search,
+    )
+    
 @app.get("/tasks/{task_id}", response_model=TaskResponse, tags=["tasks"])
 def get_task(task_id: str) -> TaskResponse:
     task = storage.get_task_by_id(task_id)
