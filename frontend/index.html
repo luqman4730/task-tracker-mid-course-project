@@ -241,7 +241,10 @@
             color: #111827;
         }
 
-        .form-row input[type="text"], .form-row textarea, .form-row select {
+        .form-row input[type="text"],
+        .form-row input[type="date"],
+        .form-row textarea,
+        .form-row select {
             width: 100%;
             padding: 0.85rem 1rem;
             border: 1px solid rgba(148, 163, 184, 0.35);
@@ -259,6 +262,7 @@
         }
 
         .form-row input[type="text"]:focus,
+        .form-row input[type="date"]:focus,
         .form-row textarea:focus,
         .form-row select:focus {
             outline: none;
@@ -423,6 +427,10 @@
                 <div class="form-row">
                     <label for="assignee">Assignee</label>
                     <input id="assignee" name="assignee" type="text" />
+                </div>
+                <div class="form-row">
+                    <label for="due-date">Due Date</label>
+                    <input id="due-date" name="due_date" type="date" />
                 </div>
                 <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:0.5rem;">
                     <button type="button" id="modal-cancel" class="task-button">Cancel</button>
@@ -650,14 +658,18 @@
                 const cards = columnTasks.length
                     ? columnTasks.map((task) => {
                         const assigneeText = task.assignee ? escapeHtml(task.assignee) : "Unassigned";
+                        const dueDateText = task.due_date
+                            ? `Due: ${escapeHtml(task.due_date)}`
+                            : "No due date";
+
                         return `
                             <article class="task-card" data-task-id="${escapeHtml(task.id)}">
                                 <h2>${escapeHtml(task.title)}</h2>
                                 <p>${escapeHtml(task.description || "")}</p>
                                 <div class="task-meta">
                                     <span class="chip ${escapeHtml(task.priority)}">${escapeHtml(task.priority)}</span>
-                                    <span>${assigneeText}</span>
                                     <span>Assignee: ${assigneeText}</span>
+                                    <span>${dueDateText}</span>
                                 </div>
                                 <button class="task-button edit-button" data-task-id="${escapeHtml(task.id)}" type="button">Edit</button>
                             </article>
@@ -706,6 +718,7 @@
             document.getElementById('status').value = 'ToDo';
             document.getElementById('priority').value = 'Medium';
             document.getElementById('assignee').value = '';
+            document.getElementById('due-date').value = '';
             openModal();
         }
 
@@ -720,6 +733,7 @@
             document.getElementById('status').value = task.status || 'ToDo';
             document.getElementById('priority').value = task.priority || 'Medium';
             document.getElementById('assignee').value = task.assignee || '';
+            document.getElementById('due-date').value = task.due_date || '';
             openModal();
         }
 
@@ -763,6 +777,8 @@
             const priorityVal = document.getElementById('priority').value;
             const assigneeRaw = document.getElementById('assignee').value.trim();
             const assignee = assigneeRaw === '' ? null : assigneeRaw;
+            const dueDateRaw = document.getElementById('due-date').value;
+            const dueDate = dueDateRaw === '' ? null : dueDateRaw;
 
             const payload = {
                 title: title,
@@ -770,6 +786,7 @@
                 status: statusVal,
                 priority: priorityVal,
                 assignee: assignee,
+                due_date: dueDate,
             };
 
             const submitBtn = document.getElementById('modal-submit');
@@ -777,13 +794,28 @@
 
             try {
                 let response;
+
                 if (id) {
+                    const existingTask = tasks.find((task) => task.id === id);
+
+                    const updatePayload = {
+                        title: title,
+                        description: description === null ? '' : description,
+                        priority: priorityVal,
+                        assignee: assignee,
+                        due_date: dueDate,
+                    };
+
+                    if (existingTask && existingTask.status !== statusVal) {
+                        updatePayload.status = statusVal;
+                    }
+
                     response = await fetch(`${API_BASE}/tasks/${encodeURIComponent(id)}`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload),
+                        body: JSON.stringify(updatePayload),
                     });
-                } else {
+                }else {
                     response = await fetch(`${API_BASE}/tasks`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },

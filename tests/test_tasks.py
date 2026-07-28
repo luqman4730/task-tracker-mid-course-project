@@ -1,3 +1,5 @@
+from datetime import date, timedelta
+
 def test_create_task_valid_returns_201_with_full_body(client):
     payload = {
         "title": "My task",
@@ -476,3 +478,143 @@ def test_patch_due_date_to_null_removes_due_date(client):
 
     assert response.status_code == 200
     assert response.json()["due_date"] is None
+
+
+
+
+
+def test_list_tasks_overdue_returns_only_past_unfinished_tasks(client):
+    yesterday = (date.today() - timedelta(days=1)).isoformat()
+    tomorrow = (date.today() + timedelta(days=1)).isoformat()
+
+    overdue_response = client.post(
+        "/tasks",
+        json={
+            "title": "Overdue task",
+            "due_date": yesterday,
+            "status": "ToDo",
+        },
+    )
+    future_response = client.post(
+        "/tasks",
+        json={
+            "title": "Future task",
+            "due_date": tomorrow,
+            "status": "ToDo",
+        },
+    )
+    no_due_date_response = client.post(
+        "/tasks",
+        json={
+            "title": "No due date task",
+            "status": "ToDo",
+        },
+    )
+
+    assert overdue_response.status_code == 201
+    assert future_response.status_code == 201
+    assert no_due_date_response.status_code == 201
+
+    response = client.get("/tasks", params={"overdue": "true"})
+
+    assert response.status_code == 200
+    tasks = response.json()
+    assert len(tasks) == 1
+    assert tasks[0]["id"] == overdue_response.json()["id"]
+
+
+def test_list_tasks_due_today_is_not_overdue(client):
+    today = date.today().isoformat()
+
+    create_response = client.post(
+        "/tasks",
+        json={
+            "title": "Due today",
+            "due_date": today,
+            "status": "ToDo",
+        },
+    )
+    assert create_response.status_code == 201
+
+    response = client.get("/tasks", params={"overdue": "true"})
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_list_tasks_done_task_is_not_overdue(client):
+    yesterday = (date.today() - timedelta(days=1)).isoformat()
+
+    create_response = client.post(
+        "/tasks",
+        json={
+            "title": "Completed overdue task",
+            "due_date": yesterday,
+            "status": "Done",
+        },
+    )
+    assert create_response.status_code == 201
+
+    response = client.get("/tasks", params={"overdue": "true"})
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_list_tasks_overdue_false_does_not_filter_tasks(client):
+    yesterday = (date.today() - timedelta(days=1)).isoformat()
+    tomorrow = (date.today() + timedelta(days=1)).isoformat()
+
+    overdue_response = client.post(
+        "/tasks",
+        json={"title": "Overdue task", "due_date": yesterday},
+    )
+    future_response = client.post(
+        "/tasks",
+        json={"title": "Future task", "due_date": tomorrow},
+    )
+    assert overdue_response.status_code == 201
+    assert future_response.status_code == 201
+
+    response = client.get("/tasks", params={"overdue": "false"})
+
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+
+
+def test_list_tasks_overdue_combines_with_priority(client):
+    yesterday = (date.today() - timedelta(days=1)).isoformat()
+
+    high_response = client.post(
+        "/tasks",
+        json={
+            "title": "High overdue task",
+            "due_date": yesterday,
+            "priority": "High",
+        },
+    )
+    low_response = client.post(
+        "/tasks",
+        json={
+            "title": "Low overdue task",
+            "due_date": yesterday,
+            "priority": "Low",
+        },
+    )
+    assert high_response.status_code == 201
+    assert low_response.status_code == 201
+
+    response = client.get(
+        "/tasks",
+        params={
+            "overdue": "true",
+            "priority": "High",
+        },
+    )
+
+    assert response.status_code == 200
+    tasks = response.json()
+    assert len(tasks) == 1
+    assert tasks[0]["id"] == high_response.json()["id"]
+
+    

@@ -15,6 +15,7 @@ from app import storage
 from app.business_rules import validate_status_transition
 from app.models import TaskCreate, TaskPriority, TaskResponse, TaskStatus, TaskUpdate
 
+
 app = FastAPI(
     title="Task Tracker API",
     description="A minimal learning-project REST API for tracking tasks.",
@@ -54,11 +55,13 @@ def list_tasks(
     status: TaskStatus | None = None,
     priority: TaskPriority | None = None,
     search: str | None = None,
+    overdue: bool | None = None,
 ) -> list[TaskResponse]:
     return storage.get_all_tasks(
         status=status,
         priority=priority,
         search=search,
+        overdue=overdue,
     )
     
 @app.get("/tasks/{task_id}", response_model=TaskResponse, tags=["tasks"])

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Optional
 from uuid import uuid4
 
@@ -28,6 +28,7 @@ def get_all_tasks(
     status: Optional[TaskStatus] = None,
     priority: Optional[TaskPriority] = None,
     search: Optional[str] = None,
+    overdue: Optional[bool] = None,
 ) -> list[TaskResponse]:
     tasks = list(_tasks.values())
 
@@ -45,6 +46,16 @@ def get_all_tasks(
             for task in tasks
             if search_text in task.title.casefold()
             or search_text in task.description.casefold()
+        ]
+
+    if overdue is True:
+        today = date.today()
+        tasks = [
+            task
+            for task in tasks
+            if task.due_date is not None
+            and task.due_date < today
+            and task.status != TaskStatus.DONE
         ]
 
     return tasks
