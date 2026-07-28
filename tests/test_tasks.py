@@ -402,3 +402,77 @@ def test_delete_missing_returns_404(client):
 
     assert response.status_code == 404
     assert response.json()["detail"] == f"Task with id {missing_id} not found"
+
+
+
+def test_create_task_with_due_date_returns_201(client):
+    response = client.post(
+        "/tasks",
+        json={
+            "title": "Task with deadline",
+            "due_date": "2026-08-15",
+        },
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["due_date"] == "2026-08-15"
+
+
+def test_create_task_without_due_date_returns_null(client):
+    response = client.post(
+        "/tasks",
+        json={"title": "Task without deadline"},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["due_date"] is None
+
+
+def test_create_task_invalid_due_date_returns_422(client):
+    response = client.post(
+        "/tasks",
+        json={
+            "title": "Task with invalid deadline",
+            "due_date": "15/08/2026",
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_patch_due_date_updates_existing_task(client):
+    create_response = client.post(
+        "/tasks",
+        json={"title": "Original task"},
+    )
+    assert create_response.status_code == 201
+    task = create_response.json()
+
+    response = client.patch(
+        f"/tasks/{task['id']}",
+        json={"due_date": "2026-09-01"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["due_date"] == "2026-09-01"
+
+
+def test_patch_due_date_to_null_removes_due_date(client):
+    create_response = client.post(
+        "/tasks",
+        json={
+            "title": "Task with deadline",
+            "due_date": "2026-09-01",
+        },
+    )
+    assert create_response.status_code == 201
+    task = create_response.json()
+
+    response = client.patch(
+        f"/tasks/{task['id']}",
+        json={"due_date": None},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["due_date"] is None
