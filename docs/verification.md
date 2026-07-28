@@ -22,3 +22,22 @@
 - `GET /tasks?search=A&status=Done` returned HTTP 200 with `[]`.
 
 Result: Search and combined filtering behaved as expected.
+
+
+### Break Test 1: Search title matching
+
+- Test: `test_list_tasks_search_matches_title`
+- Temporary break: changed partial matching to exact title equality.
+- Failure observed: expected one result, but zero tasks were returned.
+- After restoring partial matching, the test passed.
+
+
+### Break Test 2 – Combined Search, Status, and Priority
+
+- Temporarily disabled priority filtering in `get_all_tasks`.
+- Ran:
+  `python -m pytest tests/test_tasks.py::test_list_tasks_search_combined_with_status_and_priority`
+- The test failed as expected because two tasks were returned instead of one.
+- Restored the priority filter.
+- Re-ran the same test.
+- Result: 1 passed.
