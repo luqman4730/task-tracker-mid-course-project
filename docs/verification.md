@@ -1,43 +1,115 @@
-# Verification
+# Verification Report
 
-## Baseline Before Feature Changes
+## Project
 
-- Branch: `mid-course-project`
-- Existing pytest suite: `23 passed`
-- Test command: `python -m pytest`
-- Environment: Windows, Python 3.13.14
-- Baseline result: all existing tests passed before any feature changes.
-- Frontend loaded successfully using Live Server at `http://localhost:5500/frontend/index.html`.
-- The frontend successfully fetched and displayed tasks from the running backend.
+Task Tracker Mid-Course Project
 
+---
 
+# Environment
 
-## Feature 1 Backend Manual Verification
+- Python 3.13
+- FastAPI
+- pytest
+- HTML / CSS / JavaScript frontend
 
-- `GET /tasks?search=A` returned only task A.
-- `GET /tasks?search=B` returned only task B.
-- `GET /tasks?search=C` returned only task C.
-- `GET /tasks?search=xxxxxxxx` returned HTTP 200 with `[]`.
-- `GET /tasks?search=A&status=ToDo` returned task A.
-- `GET /tasks?search=A&status=Done` returned HTTP 200 with `[]`.
+---
 
-Result: Search and combined filtering behaved as expected.
+# Automated Tests
 
+Command:
 
-### Break Test 1: Search title matching
+```bash
+python -m pytest
+```
 
-- Test: `test_list_tasks_search_matches_title`
-- Temporary break: changed partial matching to exact title equality.
-- Failure observed: expected one result, but zero tasks were returned.
-- After restoring partial matching, the test passed.
+Result:
 
+```
+39 passed
+```
 
-### Break Test 2 – Combined Search, Status, and Priority
+All existing tests continued to pass after implementing the new features.
 
-- Temporarily disabled priority filtering in `get_all_tasks`.
-- Ran:
-  `python -m pytest tests/test_tasks.py::test_list_tasks_search_combined_with_status_and_priority`
-- The test failed as expected because two tasks were returned instead of one.
-- Restored the priority filter.
-- Re-ran the same test.
-- Result: 1 passed.
+Additional tests were added for:
+
+- Due date creation
+- Due date updates
+- Removing a due date
+- Overdue filtering
+- Search functionality
+- Combined filtering
+
+---
+
+# Backend Verification
+
+Verified manually using Swagger UI.
+
+## Health endpoint
+
+- GET `/health`
+- Returned HTTP 200
+
+## Task endpoints
+
+Verified:
+
+- Create task
+- Retrieve task
+- Update task
+- Delete task
+- Search tasks
+- Status filtering
+- Priority filtering
+- Combined filtering
+- Overdue filtering
+
+Expected validation errors continued to return HTTP 422.
+
+---
+
+# Frontend Verification
+
+Verified in the browser.
+
+Confirmed that users can:
+
+- Create tasks
+- Edit tasks
+- Delete tasks
+- Assign a due date
+- Remove a due date
+- View due dates
+- View overdue badges
+- Search by title or description
+- Filter by status
+- Filter by priority
+- Filter overdue tasks
+- Combine multiple filters
+
+The existing drag-and-drop status update functionality continued to work correctly.
+
+---
+
+# Regression Verification
+
+The following existing functionality was verified after implementing the new features:
+
+- Task creation
+- Task editing
+- Task deletion
+- Status transitions
+- Priority filtering
+- Existing validation rules
+- Existing API endpoints
+
+No previously implemented functionality was intentionally changed.
+
+---
+
+# Result
+
+The project passed automated tests and manual verification.
+
+The implemented features integrate with the existing application while preserving the original functionality.
