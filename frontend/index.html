@@ -314,6 +314,95 @@
             outline-offset: -6px;
         }
 
+        .filters {
+            display: grid;
+            grid-template-columns: minmax(14rem, 2fr) repeat(2, minmax(10rem, 1fr)) auto auto auto;
+            gap: 0.75rem;
+            align-items: end;
+            margin-bottom: 1.25rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            border-radius: 1rem;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+        }
+
+        .filter-field label {
+            display: block;
+            margin-bottom: 0.35rem;
+            font-weight: 700;
+            color: #111827;
+            font-size: 0.9rem;
+        }
+
+        .filter-field input,
+        .filter-field select {
+            width: 100%;
+            padding: 0.75rem 0.85rem;
+            border: 1px solid rgba(148, 163, 184, 0.35);
+            border-radius: 0.8rem;
+            background: #f8fafc;
+            color: #0f172a;
+            font-size: 0.95rem;
+        }
+
+        .filter-field input:focus,
+        .filter-field select:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+            background: #ffffff;
+        }
+
+        .overdue-control {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-height: 2.8rem;
+            white-space: nowrap;
+            font-weight: 700;
+            color: #334155;
+        }
+
+        .overdue-control input {
+            width: 1rem;
+            height: 1rem;
+        }
+
+        .secondary-button {
+            background: #e2e8f0;
+            color: #0f172a;
+            box-shadow: none;
+        }
+
+        .secondary-button:hover {
+            background: #cbd5e1;
+        }
+
+        .overdue-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35rem 0.65rem;
+            border-radius: 9999px;
+            background: #fee2e2;
+            color: #b91c1c;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        @media (max-width: 920px) {
+            .filters {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .filters {
+                grid-template-columns: 1fr;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -329,6 +418,41 @@
         </div>
     </header>
     <main>
+        <section class="filters" aria-label="Task filters">
+            <div class="filter-field">
+                <label for="search-filter">Search</label>
+                <input id="search-filter" type="text" placeholder="Search title or description" />
+            </div>
+
+            <div class="filter-field">
+                <label for="status-filter">Status</label>
+                <select id="status-filter">
+                    <option value="">All statuses</option>
+                    <option value="ToDo">To Do</option>
+                    <option value="InProgress">In Progress</option>
+                    <option value="Done">Done</option>
+                </select>
+            </div>
+
+            <div class="filter-field">
+                <label for="priority-filter">Priority</label>
+                <select id="priority-filter">
+                    <option value="">All priorities</option>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                </select>
+            </div>
+
+            <label class="overdue-control" for="overdue-filter">
+                <input id="overdue-filter" type="checkbox" />
+                Overdue only
+            </label>
+
+            <button id="apply-filters" class="task-button" type="button">Apply</button>
+            <button id="clear-filters" class="task-button secondary-button" type="button">Clear</button>
+        </section>
+
         <section class="board" aria-label="Task board">
             <article class="column" data-status="ToDo">
                 <div class="column-header">
@@ -460,6 +584,18 @@
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#39;");
+        }
+
+        function isTaskOverdue(task) {
+            if (!task.due_date || task.status === "Done") {
+                return false;
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const dueDate = new Date(`${task.due_date}T00:00:00`);
+            return dueDate < today;
         }
 
         function sortTasks(taskList) {
@@ -661,6 +797,9 @@
                         const dueDateText = task.due_date
                             ? `Due: ${escapeHtml(task.due_date)}`
                             : "No due date";
+                        const overdueBadge = isTaskOverdue(task)
+                            ? '<span class="overdue-badge">Overdue</span>'
+                            : "";
 
                         return `
                             <article class="task-card" data-task-id="${escapeHtml(task.id)}">
@@ -670,6 +809,7 @@
                                     <span class="chip ${escapeHtml(task.priority)}">${escapeHtml(task.priority)}</span>
                                     <span>Assignee: ${assigneeText}</span>
                                     <span>${dueDateText}</span>
+                                    ${overdueBadge}
                                 </div>
                                 <button class="task-button edit-button" data-task-id="${escapeHtml(task.id)}" type="button">Edit</button>
                             </article>
@@ -863,10 +1003,35 @@
             if (e.key === 'Escape') closeModal();
         });
 
+        function buildTaskQuery() {
+            const params = new URLSearchParams();
+
+            const search = document.getElementById('search-filter').value.trim();
+            const status = document.getElementById('status-filter').value;
+            const priority = document.getElementById('priority-filter').value;
+            const overdue = document.getElementById('overdue-filter').checked;
+
+            if (search) {
+                params.set('search', search);
+            }
+            if (status) {
+                params.set('status', status);
+            }
+            if (priority) {
+                params.set('priority', priority);
+            }
+            if (overdue) {
+                params.set('overdue', 'true');
+            }
+
+            const query = params.toString();
+            return query ? `?${query}` : '';
+        }
+
         async function fetchTasks() {
             renderLoading();
             try {
-                const response = await fetch(`${API_BASE}/tasks`);
+                const response = await fetch(`${API_BASE}/tasks${buildTaskQuery()}`);
                 if (!response.ok) {
                     throw new Error(`Task load failed: ${response.status}`);
                 }
@@ -878,6 +1043,22 @@
                 console.error(error);
             }
         }
+
+        function clearFilters() {
+            document.getElementById('search-filter').value = '';
+            document.getElementById('status-filter').value = '';
+            document.getElementById('priority-filter').value = '';
+            document.getElementById('overdue-filter').checked = false;
+            fetchTasks();
+        }
+
+        document.getElementById('apply-filters').addEventListener('click', fetchTasks);
+        document.getElementById('clear-filters').addEventListener('click', clearFilters);
+        document.getElementById('search-filter').addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                fetchTasks();
+            }
+        });
 
         window.addEventListener("DOMContentLoaded", fetchTasks);
     </script>
