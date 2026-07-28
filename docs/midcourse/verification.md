@@ -26,7 +26,7 @@ python -m pytest
 Result:
 
 ```
-39 passed
+40 passed
 ```
 
 All existing tests continued to pass after implementing the new features.
@@ -39,6 +39,7 @@ Additional tests were added for:
 - Overdue filtering
 - Search functionality
 - Combined filtering
+- Rejecting explicit null values for task titles during updates
 
 ---
 
