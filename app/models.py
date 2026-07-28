@@ -52,7 +52,7 @@ class TaskUpdate(BaseModel):
     @classmethod
     def validate_title(cls, v: Optional[str]) -> Optional[str]:
         if v is None:
-            return v
+            raise ValueError("title must not be null")
         stripped = v.strip()
         if not stripped:
             raise ValueError("title must not be blank")

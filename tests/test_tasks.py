@@ -618,3 +618,20 @@ def test_list_tasks_overdue_combines_with_priority(client):
     assert tasks[0]["id"] == high_response.json()["id"]
 
     
+def test_patch_null_title_returns_422(client):
+    create_response = client.post(
+        "/tasks",
+        json={"title": "Original title"},
+    )
+
+    assert create_response.status_code == 201
+
+    task = create_response.json()
+
+    response = client.patch(
+        f"/tasks/{task['id']}",
+        json={"title": None},
+    )
+
+    assert response.status_code == 422
+    assert "title must not be null" in response.text

@@ -108,6 +108,56 @@ No previously implemented functionality was intentionally changed.
 
 ---
 
+# Break Test Verification
+
+To verify that the automated tests detect regressions correctly, two intentional defects were introduced into the application.
+
+## Break Test 1 – Blank title validation
+
+Intentional change:
+
+- Temporarily removed the validation that rejects blank task titles.
+
+Verification:
+
+- Ran the related pytest test.
+- The test failed as expected because the API incorrectly accepted the invalid title.
+
+Recovery:
+
+- Restored the original validation.
+- Re-ran the test.
+- The test passed successfully.
+
+Result:
+
+- Confirmed that the automated test correctly detects regressions in title validation.
+
+---
+
+## Break Test 2 – Overdue filtering
+
+Intentional change:
+
+- Temporarily modified the overdue calculation so that completed tasks were incorrectly reported as overdue.
+
+Verification:
+
+- Ran the overdue filtering tests.
+- The tests failed as expected.
+
+Recovery:
+
+- Restored the correct overdue logic.
+- Re-ran the tests.
+- All tests passed.
+
+Result:
+
+- Confirmed that the overdue filtering tests detect regressions correctly.
+
+---
+
 # Result
 
 The project passed automated tests and manual verification.
