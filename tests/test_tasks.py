@@ -150,6 +150,81 @@ def test_patch_same_status_returns_422(client, created_task):
     assert response.status_code == 422
 
 
+def test_patch_blank_title_returns_422(client):
+    create_response = client.post("/tasks", json={"title": "Original title"})
+    assert create_response.status_code == 201
+    task = create_response.json()
+
+    response = client.patch(f"/tasks/{task['id']}", json={"title": "   "})
+
+    assert response.status_code == 422
+    assert "title must not be blank" in response.text
+
+
+def test_patch_invalid_priority_returns_422(client):
+    create_response = client.post("/tasks", json={"title": "Original title"})
+    assert create_response.status_code == 201
+    task = create_response.json()
+
+    response = client.patch(f"/tasks/{task['id']}", json={"priority": "Urgent"})
+
+    assert response.status_code == 422
+    assert "Input should be 'Low', 'Medium' or 'High'" in response.text
+
+
+def test_patch_unsupported_status_returns_422(client):
+    create_response = client.post("/tasks", json={"title": "Original title"})
+    assert create_response.status_code == 201
+    task = create_response.json()
+
+    response = client.patch(f"/tasks/{task['id']}", json={"status": "Completed"})
+
+    assert response.status_code == 422
+    assert "Input should be 'ToDo', 'InProgress' or 'Done'" in response.text
+
+
+def test_patch_unknown_field_returns_422(client):
+    create_response = client.post("/tasks", json={"title": "Original title"})
+    assert create_response.status_code == 201
+    task = create_response.json()
+
+    response = client.patch(f"/tasks/{task['id']}", json={"title": "Updated title", "made_up": "value"})
+
+    assert response.status_code == 422
+    assert "Extra inputs are not permitted" in response.text
+
+
+def test_patch_empty_body_leaves_task_unchanged(client):
+    create_response = client.post("/tasks", json={"title": "Original title", "priority": "High"})
+    assert create_response.status_code == 201
+    task = create_response.json()
+
+    response = client.patch(f"/tasks/{task['id']}", json={})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == task["id"]
+    assert body["title"] == task["title"]
+    assert body["priority"] == task["priority"]
+
+
+def test_patch_done_to_inprogress_returns_200(client):
+    create_response = client.post("/tasks", json={"title": "Original title"})
+    assert create_response.status_code == 201
+    task = create_response.json()
+
+    first_patch = client.patch(f"/tasks/{task['id']}", json={"status": "InProgress"})
+    assert first_patch.status_code == 200
+
+    second_patch = client.patch(f"/tasks/{task['id']}", json={"status": "Done"})
+    assert second_patch.status_code == 200
+
+    response = client.patch(f"/tasks/{task['id']}", json={"status": "InProgress"})
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "InProgress"
+
+
 def test_delete_existing_returns_204_no_body(client, created_task):
     response = client.delete(f"/tasks/{created_task['id']}")
 
