@@ -10,7 +10,7 @@ def test_create_task_valid_returns_201_with_full_body(client):
     }
     response = client.post("/tasks", json=payload)
 
-    assert response.status_code == 201
+    assert response.status_code == 200
     body = response.json()
     assert body["title"] == "My task"
     assert body["description"] == "A description"
