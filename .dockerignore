@@ -1,0 +1,54 @@
+# Secrets and local environment
+.env
+.env.*
+*.pem
+*.key
+
+# Version control and CI
+.git
+.gitignore
+.gitattributes
+.github
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Python caches and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Build artifacts and packaging
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Node (present only if frontend tooling is added later)
+node_modules/
+npm-debug.log*
+
+# Project files not needed at runtime
+tests/
+docs/
+data/
+README.md
+CLAUDE.md
+Dockerfile
+.dockerignore
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
+*~
