@@ -243,6 +243,4 @@ The mid-course documentation is in `docs/midcourse/`:
 - [`verification.md`](docs/midcourse/verification.md)
 - [`prompt-log.md`](docs/midcourse/prompt-log.md)
 - [`reflection.md`](docs/midcourse/reflection.md)
-
-There is no `docs/decisions/` directory in this repository; `docs/midcourse/mini-adr.md`
-is the decision record.
+- [`dockerfile-design.md`](docs/decisions/dockerfile-design.md) - Dockerfile design decision note
