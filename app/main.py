@@ -1,9 +1,10 @@
 """
 Task Tracker API - Application Entry Point
 
-This module creates the FastAPI application instance and defines
-the health-check endpoint. CRUD routes, business logic, and storage
-wiring will be added in later tasks.
+This module creates the FastAPI application, configures CORS,
+and defines the health-check and task CRUD endpoints.
+Task storage and status-transition rules are handled by
+the storage and business-rules modules.
 """
 
 from datetime import datetime, timezone
@@ -217,9 +218,10 @@ def update_task(task_id: str, payload: TaskUpdate) -> TaskResponse:
             left out are untouched.
 
     Returns:
-        TaskResponse: The updated task. If the body is empty, the task is
-            returned unchanged (including its original ``updated_at``).
-
+        TaskResponse: The updated task. If the request body is an empty JSON
+            object (``{}``), the task is returned unchanged (including its
+            original ``updated_at``).
+            
     Raises:
         HTTPException: 404 Not Found if no task has this identifier.
         HTTPException: 422 Unprocessable Entity if ``status`` is present and the
