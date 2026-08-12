@@ -30,4 +30,4 @@ Copilot fits naturally when I am editing code and want quick, local assistance. 
 
 All three tools can help achieve similar goals, but the interaction model is different. The important skill is therefore not only learning how to ask AI to write code, but also choosing the workflow that fits the task and knowing when to inspect, test, and verify what the AI produces.
 
-The biggest lesson from this module was that greater AI capability does not remove the developer's responsibility. The more access and autonomy I give an AI tool, the more important it becomes for me to understand the proposed changes and verify them with actual evidence.
+The biggest lesson from this module was that greater AI capability does not remove the developer's responsibility. The more access and autonomy I give an AI tool, the more important it becomes for me to understand the proposed changes and verify them with actual evidence.لهف 
