@@ -1,0 +1,17 @@
+# Architecture Context Strategy Comparison
+
+## 1. Strategy Comparison Table
+
+| Strategy | What It Got Right | What It Got Wrong, Missed, Or Invented | Best Suited For |
+|---|---|---|---|
+| Strategy A: minimal context | Produced the most complete architecture-style draft. It covered backend, frontend, request flow, key files, tests, Docker, CI, validation, filtering, in-memory storage, and visible assumptions. It also clearly separated confirmed behavior from "Not Visible Or Assumptions." | It required broader repository discovery than the other strategies and inspected many files to build a complete picture. This produced strong coverage, but it made the process less bounded and more dependent on the agent deciding for itself which files were relevant. No clear invention was identified in the draft, but this discovery-heavy approach can make scope and evidence harder to control. | Broad first-pass documentation when the goal is coverage and the user can later verify claims against files. |
+| Strategy B: structured context with AGENTS.md and file summaries | Gave the cleanest and most balanced architecture document. It captured the core app shape, data model, request flow, key files, status-transition rules, storage behavior, and unconfirmed areas without becoming too detailed. It followed the governance style well by marking unsupported areas as "not confirmed." | It missed some detail present in A, such as `.github/workflows/ci.yml`, `tests/test_tasks.py`, Docker copying `frontend/`, `.env.example`, and the note that the backend does not visibly serve the frontend. It is less granular than A for edge cases and operational observations. | Final documentation or review work where accuracy, traceability, and readable scope matter more than maximum detail. |
+| Strategy C: targeted anchor files | Was the most disciplined about scope. It avoided claiming frontend, tests, dependencies, Docker, CI, and exact transition rules when those files were not visible from its context. It gave a precise backend-centered request flow and clearly stated what was not visible. | It missed important architecture areas that A and B included, especially the frontend, tests, dependencies, Docker, CI, and the actual status-transition rules. It also creates an incomplete architecture doc if the assignment expects the whole repository rather than only the inspected anchor files. | Narrow backend analysis, debugging, or documenting a specific flow where avoiding unsupported claims is more important than repository-wide coverage. |
+
+## 2. Verdict Paragraph
+
+I chose Strategy B for the final `docs/architecture.md` because it gives the best balance between completeness and evidence discipline. Strategy A is richer but relies on broader agent-led repository discovery, while Strategy C is careful but too narrow for a full architecture document. Strategy B uses the structured context to cover the backend, frontend, data model, request flow, storage behavior, and known gaps without inventing unsupported architecture.
+
+## 3. Two-Sentence Context-Engineering Rule
+
+For repository-level documentation, I use structured context with project instructions and file summaries because it gives enough coverage to describe the system while still keeping claims tied to inspected evidence. For narrow implementation or debugging tasks, I use targeted anchor files because a smaller context window reduces noise and makes it easier to avoid inventing behavior outside the files being changed.
