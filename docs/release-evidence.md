@@ -13,7 +13,7 @@
 ## CI evidence
 
 * Workflow file: `.github/workflows/ci.yml`
-* Latest run: GitHub Actions CI run `#13`, `Complete final course project evidence`, on branch `final-project`, completed successfully on 2026-08-23.
+* Final-project CI check: GitHub Actions completed successfully on the `final-project` branch after the final evidence updates.
 * Test command used by CI: `python -m pytest -v`
 * Python version: `3.11`
 * Dependency installation: `pip install -r requirements.txt`
