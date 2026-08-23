@@ -79,7 +79,7 @@ pip install -r requirements.txt
 Start the API from the repository root:
 
 ```bash
-uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --reload --port 8000
 ```
 
 - API root: `http://localhost:8000`
@@ -244,3 +244,97 @@ The mid-course documentation is in `docs/midcourse/`:
 - [`prompt-log.md`](docs/midcourse/prompt-log.md)
 - [`reflection.md`](docs/midcourse/reflection.md)
 - [`dockerfile-design.md`](docs/decisions/dockerfile-design.md) - Dockerfile design decision note
+
+## Final Project
+
+Branch reviewed: `final-project`
+
+### What this submission demonstrates
+
+* The existing Task Tracker still runs inside the intended course scope.
+* CI runs the pytest suite on push and pull request.
+* The Docker image builds and runs successfully, with `/health` returning HTTP `200`.
+* AI review, security, release, and ownership evidence is documented in `docs/`.
+
+### How to run locally
+
+From the repository root:
+
+```bash
+pip install -r requirements.txt
+python -m uvicorn app.main:app --reload --port 8000
+```
+
+The API is available at:
+
+```text
+http://localhost:8000
+```
+
+The health endpoint is:
+
+```text
+http://localhost:8000/health
+```
+
+To run the frontend in a second terminal:
+
+```bash
+python -m http.server 5500
+```
+
+Then open:
+
+```text
+http://localhost:5500/frontend/index.html
+```
+
+VS Code Live Server can also be used to open the frontend on port `5500`.
+
+### How to run tests
+
+```bash
+python -m pytest -v
+```
+
+Final baseline verification:
+
+```text
+40 passed
+```
+
+### How to run with Docker
+
+Build the image:
+
+```bash
+docker build -t task-tracker-final .
+```
+
+Run the container:
+
+```bash
+docker run --rm -p 8000:8000 task-tracker-final
+```
+
+Verify the health endpoint:
+
+```bash
+curl http://localhost:8000/health
+```
+
+The container runs as the non-root user `app`.
+
+### Evidence files
+
+* `docs/release-evidence.md`
+* `docs/final-ai-review.md`
+* `docs/ai-playbook.md`
+
+### AI assistance summary
+
+AI helped with review, documentation, Docker and CI analysis, security review, and debugging during the course and final release check.
+
+I verified the final work by running the application, checking the frontend create/edit flow, running the full pytest suite, reviewing the CI workflow, building and running the Docker image, checking `/health`, and confirming the container runs as a non-root user.
+
+One AI-supported documentation claim I corrected was the local API startup command. The direct `uvicorn` command failed in the current environment, so I verified and documented `python -m uvicorn app.main:app --reload --port 8000` instead.

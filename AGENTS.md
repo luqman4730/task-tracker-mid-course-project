@@ -28,7 +28,7 @@ pip install -r requirements.txt
 Run the API locally:
 
 ```bash
-uvicorn app.main:app --reload --port 8000
+python -m uvicorn app.main:app --reload --port 8000
 ```
 
 Run the static frontend:

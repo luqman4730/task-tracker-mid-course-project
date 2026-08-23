@@ -6,7 +6,7 @@
 * I use AI early for planning and comparing approaches before I start changing code. In the architecture and context-engineering work, comparing alternatives first helped me see trade-offs before committing to one direction.
 * I also use AI when I need a first draft or scaffold that I can inspect and improve. During the course, I used this approach for things like tests, documentation, and Docker configuration, then reviewed and adjusted the result before keeping it.
 
-## 2. When I do not reach for AI
+## 2. When I do not reach for AI first
 
 * I do not ask AI to decide something for me when the decision is supposed to reflect my own judgment. The governance work, context strategy comparison, and this playbook all showed me that AI can help organize the thinking, but I still need to make the final choice.
 * I do not ask for a fix before I understand the actual failure. During testing, running the test and seeing the real error was more useful than describing the problem from memory.
