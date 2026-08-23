@@ -4,7 +4,7 @@
 
 * Branch: `final-project`
 * Date: 2026-08-23
-* Local app run command: `python -m uvicorn app.main:app --reload`
+* Local app run command: `python -m uvicorn app.main:app --reload --port 8000`
 * `/health` result: HTTP `200 OK` with `{"status":"ok", ...}`
 * Frontend check: Opened `frontend/index.html` using VS Code Live Server at `http://localhost:5500/frontend/index.html`. The Kanban board was visible, and both task creation and task editing worked normally.
 * Test command: `python -m pytest`
@@ -13,7 +13,7 @@
 ## CI evidence
 
 * Workflow file: `.github/workflows/ci.yml`
-* Latest run: GitHub Actions CI run `#10`, `Add context engineering architecture comparison`, completed successfully on 2026-08-22.
+* Latest run: GitHub Actions CI run `#13`, `Complete final course project evidence`, on branch `final-project`, completed successfully on 2026-08-23.
 * Test command used by CI: `python -m pytest -v`
 * Python version: `3.11`
 * Dependency installation: `pip install -r requirements.txt`
@@ -36,5 +36,5 @@
 | ----------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- | ---------------------------------------------------------------------------- |
 | The full test suite runs with `python -m pytest -v` and reports 40 passing tests.                                       | Ran the suite locally from the repository root. Result: `40 passed in 0.31s`.                                                                                                   | Verified          | No change needed.                                                            |
 | The Docker image builds, the container serves `/health`, and the runtime user is non-root.                              | Built `task-tracker-final`, ran it on host port 8001, verified `/health`, and ran `whoami` inside a fresh container.                                                            | Verified          | No change needed.                                                            |
-| The documented local API command `uvicorn app.main:app --reload --port 8000` works reliably in the current environment. | The direct `uvicorn` command failed because the existing virtual environment referenced an old interpreter path. `python -m uvicorn app.main:app --reload` worked successfully. | Needed correction | Updated README to use `python -m uvicorn app.main:app --reload --port 8000`. |
+| The documented local API command `uvicorn app.main:app --reload --port 8000` works reliably in the current environment. | The direct `uvicorn` command failed because the existing virtual environment referenced an old interpreter path. `python -m uvicorn app.main:app --reload --port 8000` worked successfully. | Needed correction | Updated README to use `python -m uvicorn app.main:app --reload --port 8000`. |
 | The frontend can be opened with VS Code Live Server on port 5500.                                                       | Used VS Code `Go Live`; the Task Board opened at `http://localhost:5500/frontend/index.html`, and create/edit actions worked.                                                   | Verified          | No change needed.                                                            |
